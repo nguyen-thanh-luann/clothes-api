@@ -41,7 +41,6 @@ productRouter.post('/', async (req, res) => {
 
 productRouter.delete('/:id', async (req, res) => {
   const product = await Product.findById(req.params.id)
-  console.log(`product: ${product}`)
   if (product) {
     await product.remove()
     res.send({ message: 'Product Deleted' })
