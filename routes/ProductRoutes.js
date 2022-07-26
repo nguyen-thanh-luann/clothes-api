@@ -9,6 +9,16 @@ productRouter.get('/', async (req, res) => {
   res.send(posts)
 })
 
+// Get product by id
+productRouter.get('/:id', async (req, res) => {
+  const post = await Product.findById(req.params.id)
+  if (post) {
+    res.send(post)
+  } else {
+    res.status(404).send({ message: 'Product Not Found' })
+  }
+})
+
 //add new Products
 productRouter.post('/', async (req, res) => {
   const newProduct = new Product({
