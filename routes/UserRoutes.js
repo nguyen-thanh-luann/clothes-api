@@ -2,7 +2,7 @@ import express from 'express'
 import User from '../models/User.js'
 import bcrypt from 'bcryptjs'
 import expressAsyncHandler from 'express-async-handler'
-import { generateToken } from '../utils.js'
+import { generateToken, isAdmin, isAuth } from '../utils.js'
 
 const userRouter = express.Router()
 // Get all users
