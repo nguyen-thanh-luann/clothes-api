@@ -3,12 +3,32 @@ import expressAsyncHandler from 'express-async-handler'
 import Product from '../models/Product.js'
 
 const productRouter = express.Router()
-const PAGE_SIZE = 3
 
-// Get all products
+//number of elements in each page
+const PAGE_SIZE = 4
+
+// Get products
 productRouter.get('/', async (req, res) => {
-  const products = await Product.find()
-  res.send(products)
+  let limit = req.query.limit || 4
+  let page = req.query.page
+
+  if (page) {
+    //get page (page can not smaller than 0)
+    page = parseInt(page)
+    limit = parseInt(limit)
+
+    if (page <= 0) {
+      page = 1
+    }
+    let skipPro = (page - 1) * limit
+    const products = await Product.find().skip(skipPro).limit(limit)
+    const countProducts = await Product.countDocuments()
+    res.send({ products, pages: Math.ceil(countProducts / limit) })
+  } else {
+    //get all
+    const products = await Product.find()
+    res.send({ products })
+  }
 })
 
 // Get product by id
@@ -21,7 +41,7 @@ productRouter.get('/:id', async (req, res) => {
   }
 })
 
-//get add categories
+//get all categories
 productRouter.get(
   '/categories',
   expressAsyncHandler(async (req, res) => {
@@ -53,6 +73,7 @@ productRouter.post(
   })
 )
 
+//delete product
 productRouter.delete(
   '/:id',
   expressAsyncHandler(async (req, res) => {
@@ -66,6 +87,7 @@ productRouter.delete(
   })
 )
 
+//update product
 productRouter.put(
   '/:id',
   expressAsyncHandler(async (req, res) => {

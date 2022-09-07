@@ -29,10 +29,10 @@ app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 
 // products
-app.use('/api/product', productRouter)
+app.use('/product', productRouter)
 
 //users
-app.use('/api/user', userRouter)
+app.use('/user', userRouter)
 
 const port = process.env.PORT || 5000
 app.listen(port, () => {
