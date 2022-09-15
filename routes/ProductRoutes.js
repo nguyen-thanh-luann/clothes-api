@@ -12,6 +12,7 @@ productRouter.get('/', async (req, res) => {
   let q = req.query
   let limit = q.limit || PAGE_SIZE
   let page = q.page || 1
+  let name = q.name || ''
   let category = q.category || ''
   let brand = q.brand || ''
 
@@ -26,12 +27,15 @@ productRouter.get('/', async (req, res) => {
       limit = PAGE_SIZE
     }
 
-    const searchQuery = {
-      name: {
-        $regex: q.query,
-        $options: 'i',
-      },
-    }
+    const nameFilter =
+      name && name !== ''
+        ? {
+            name: {
+              $regex: name,
+              $options: 'i',
+            },
+          }
+        : {}
 
     const categoryFilter =
       category && category !== ''
@@ -51,7 +55,7 @@ productRouter.get('/', async (req, res) => {
         : {}
 
     const query = {
-      ...searchQuery,
+      ...nameFilter,
       ...categoryFilter,
       ...brandFilter,
     }
