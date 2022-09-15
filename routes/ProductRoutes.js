@@ -9,25 +9,68 @@ const PAGE_SIZE = 4
 
 // Get products
 productRouter.get('/', async (req, res) => {
-  let limit = req.query.limit || 4
-  let page = req.query.page
+  let q = req.query
+  let limit = q.limit || PAGE_SIZE
+  let page = q.page || 1
+  let category = q.category || ''
+  let brand = q.brand || ''
 
-  if (page) {
-    //get page (page can not smaller than 0)
+  if (Object.keys(q).length !== 0) {
     page = parseInt(page)
     limit = parseInt(limit)
 
     if (page <= 0) {
       page = 1
     }
+    if (limit <= 0) {
+      limit = PAGE_SIZE
+    }
+
+    const searchQuery = {
+      name: {
+        $regex: q.query,
+        $options: 'i',
+      },
+    }
+
+    const categoryFilter =
+      category && category !== ''
+        ? {
+            category: {
+              $regex: category,
+            },
+          }
+        : {}
+    const brandFilter =
+      brand && brand !== ''
+        ? {
+            brand: {
+              $regex: brand,
+            },
+          }
+        : {}
+
+    const query = {
+      ...searchQuery,
+      ...categoryFilter,
+      ...brandFilter,
+    }
+
     let skipPro = (page - 1) * limit
-    const products = await Product.find().skip(skipPro).limit(limit)
+    const products = await Product.find(query).skip(skipPro).limit(limit)
+    const foundProduct = await Product.countDocuments(query)
     const countProducts = await Product.countDocuments()
-    res.send({ products, pages: Math.ceil(countProducts / limit) })
+    res.send({
+      products,
+      pages: Math.ceil(countProducts / limit),
+      totalProduct: countProducts,
+      foundProduct: foundProduct,
+    })
   } else {
     //get all
+    const countProducts = await Product.countDocuments()
     const products = await Product.find()
-    res.send({ products })
+    res.send({ products, totalProduct: countProducts })
   }
 })
 
@@ -109,85 +152,6 @@ productRouter.put(
     } else {
       res.status(404).send({ message: 'Product Not Found' })
     }
-  })
-)
-
-//search product
-productRouter.get(
-  '/search',
-  expressAsyncHandler(async (req, res) => {
-    const { query } = req
-    const pageSize = query.pageSize || PAGE_SIZE
-    const page = query.page || 1
-    const category = query.category || ''
-    const price = query.price || ''
-    const rating = query.rating || ''
-    const order = query.order || ''
-    const searchQuery = query.query || ''
-
-    const queryFilter =
-      searchQuery && searchQuery !== 'all'
-        ? {
-            name: {
-              $regex: searchQuery,
-              $options: 'i',
-            },
-          }
-        : {}
-    const categoryFilter = category && category !== 'all' ? { category } : {}
-    const ratingFilter =
-      rating && rating !== 'all'
-        ? {
-            rating: {
-              $gte: Number(rating),
-            },
-          }
-        : {}
-    const priceFilter =
-      price && price !== 'all'
-        ? {
-            // 1-50
-            price: {
-              $gte: Number(price.split('-')[0]),
-              $lte: Number(price.split('-')[1]),
-            },
-          }
-        : {}
-    const sortOrder =
-      order === 'featured'
-        ? { featured: -1 }
-        : order === 'lowest'
-        ? { price: 1 }
-        : order === 'highest'
-        ? { price: -1 }
-        : order === 'toprated'
-        ? { rating: -1 }
-        : order === 'newest'
-        ? { createdAt: -1 }
-        : { _id: -1 }
-
-    const products = await Product.find({
-      ...queryFilter,
-      ...categoryFilter,
-      ...priceFilter,
-      ...ratingFilter,
-    })
-      .sort(sortOrder)
-      .skip(pageSize * (page - 1))
-      .limit(pageSize)
-
-    const countProducts = await Product.countDocuments({
-      ...queryFilter,
-      ...categoryFilter,
-      ...priceFilter,
-      ...ratingFilter,
-    })
-    res.send({
-      products,
-      countProducts,
-      page,
-      pages: Math.ceil(countProducts / pageSize),
-    })
   })
 )
 
