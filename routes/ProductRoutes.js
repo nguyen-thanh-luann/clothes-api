@@ -15,6 +15,7 @@ productRouter.get('/', async (req, res) => {
   let name = q.name || ''
   let category = q.category || ''
   let brand = q.brand || ''
+  let order = q.order || ''
 
   if (Object.keys(q).length !== 0) {
     page = parseInt(page)
@@ -54,6 +55,17 @@ productRouter.get('/', async (req, res) => {
           }
         : {}
 
+    const sortOrder =
+      order === 'newest'
+        ? { createdAt: -1 }
+        : order === 'lowest'
+        ? { price: 1 }
+        : order === 'highest'
+        ? { price: -1 }
+        : order === 'toprating'
+        ? { rating: -1 }
+        : { _id: 1 }
+
     const query = {
       ...nameFilter,
       ...categoryFilter,
@@ -61,12 +73,15 @@ productRouter.get('/', async (req, res) => {
     }
 
     let skipPro = (page - 1) * limit
-    const products = await Product.find(query).skip(skipPro).limit(limit)
+    const products = await Product.find(query)
+      .sort(sortOrder)
+      .skip(skipPro)
+      .limit(limit)
     const foundProduct = await Product.countDocuments(query)
     const countProducts = await Product.countDocuments()
     res.send({
       products,
-      pages: Math.ceil(countProducts / limit),
+      pages: Math.ceil(foundProduct / limit),
       totalProduct: countProducts,
       foundProduct: foundProduct,
     })
@@ -74,7 +89,7 @@ productRouter.get('/', async (req, res) => {
     //get all
     const countProducts = await Product.countDocuments()
     const products = await Product.find()
-    res.send({ products, totalProduct: countProducts })
+    res.send({ products, totalProduct: countProducts, pages: 1 })
   }
 })
 
