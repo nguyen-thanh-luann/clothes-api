@@ -23,9 +23,9 @@ userRouter.get('/:id', async (req, res) => {
 
 //delete user
 userRouter.delete(
-  '/delete/:_id',
+  '/delete/:id',
   expressAsyncHandler(async (req, res) => {
-    const user = await User.findById(req.params._id)
+    const user = await User.findById(req.params.id)
     if (user) {
       await user.remove()
       res.send({ message: 'User Deleted' })
@@ -37,14 +37,16 @@ userRouter.delete(
 
 //update user info
 userRouter.put(
-  '/:_id',
+  '/update',
   expressAsyncHandler(async (req, res) => {
-    const user = await User.findById(req.params._id)
+    const user = await User.findById(req.query.id)
     console.log(`user found: ${user}`)
     if (user) {
-      user.name = req.body.name || user.name
-      user.email = req.body.email || user.email
-      user.isAdmin = Boolean(req.body.isAdmin)
+      user.name = req.query.name || user.name
+      user.email = req.query.email || user.email
+      if (req.body.password) {
+        user.password = bcrypt.hashSync(req.body.password, 8)
+      }
 
       const updatedUser = await user.save()
       res.send({ message: 'User Updated', user: updatedUser })
