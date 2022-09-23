@@ -44,12 +44,19 @@ userRouter.put(
     if (user) {
       user.name = req.query.name || user.name
       user.email = req.query.email || user.email
-      if (req.body.password) {
-        user.password = bcrypt.hashSync(req.body.password, 8)
+      if (req.query.password.trim().length != 0) {
+        user.password = bcrypt.hashSync(req.query.password, 8)
       }
 
       const updatedUser = await user.save()
-      res.send({ message: 'User Updated', user: updatedUser })
+      res.send({
+        _id: updatedUser._id,
+        name: updatedUser.name,
+        email: updatedUser.email,
+        isAdmin: updatedUser.isAdmin,
+        token: generateToken(updatedUser),
+      })
+      return
     } else {
       res.status(404).send({ message: 'User Not Found' })
     }
