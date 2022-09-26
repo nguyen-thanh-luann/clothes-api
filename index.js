@@ -5,11 +5,11 @@ import cors from 'cors'
 
 import productRouter from './routes/ProductRoutes.js'
 import userRouter from './routes/UserRoutes.js'
-
+import categoryRouter from './routes/CategoryRouter.js'
 dotenv.config()
 
 mongoose
-  .connect(process.env.DB_URI, { useNewUrlParser: true })
+  .connect(process.env.DB_URI)
   .then(() => {
     console.log('connected to db')
   })
@@ -34,6 +34,7 @@ app.use('/product', productRouter)
 //users
 app.use('/user', userRouter)
 
+app.use('/category', categoryRouter)
 const port = process.env.PORT || 5000
 app.listen(port, () => {
   console.log('Server has started at port:' + port)
