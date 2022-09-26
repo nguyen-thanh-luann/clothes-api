@@ -15,6 +15,8 @@ productRouter.get('/', async (req, res) => {
   let name = q.name || ''
   let category = q.category || ''
   let brand = q.brand || ''
+  let price = q.price || ''
+  let rating = q.rating || ''
   let order = q.order || ''
 
   if (Object.keys(q).length !== 0) {
@@ -55,6 +57,25 @@ productRouter.get('/', async (req, res) => {
           }
         : {}
 
+    const priceFilter =
+      price && price !== ''
+        ? {
+            price: {
+              $gte: Number(price.split('-')[0]),
+              $lte: Number(price.split('-')[1]),
+            },
+          }
+        : {}
+
+    const ratingFilter =
+      rating && rating !== ''
+        ? {
+            rating: {
+              $gte: Number(rating),
+            },
+          }
+        : {}
+
     const sortOrder =
       order === 'newest'
         ? { createdAt: -1 }
@@ -70,6 +91,8 @@ productRouter.get('/', async (req, res) => {
       ...nameFilter,
       ...categoryFilter,
       ...brandFilter,
+      ...priceFilter,
+      ...ratingFilter,
     }
 
     let skipPro = (page - 1) * limit
@@ -107,7 +130,7 @@ productRouter.get('/:id', async (req, res) => {
 productRouter.get(
   '/categories',
   expressAsyncHandler(async (req, res) => {
-    const categories = await Product.find().distinct('category')
+    const categories = await Product.find()
     res.send(categories)
   })
 )
