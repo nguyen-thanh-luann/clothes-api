@@ -5,19 +5,20 @@ import Product from '../models/Product.js'
 const productRouter = express.Router()
 
 //number of elements in each page
-const PAGE_SIZE = 4
+const PAGE_SIZE = 8
 
 // Get products
 productRouter.get('/', async (req, res) => {
-  let q = req.query
+  const q = req.query
   let limit = q.limit || PAGE_SIZE
   let page = q.page || 1
-  let name = q.name || ''
-  let category = q.category || ''
-  let brand = q.brand || ''
-  let price = q.price || ''
-  let rating = q.rating || ''
-  let order = q.order || ''
+  const name = q.name || ''
+  const category = q.category || ''
+  const brand = q.brand || ''
+  const price = q.price || ''
+  const rating = q.rating || ''
+  const order = q.order || ''
+  const gender = q.gender || ''
 
   if (Object.keys(q).length !== 0) {
     page = parseInt(page)
@@ -30,6 +31,7 @@ productRouter.get('/', async (req, res) => {
       limit = PAGE_SIZE
     }
 
+    // filter product by name
     const nameFilter =
       name && name !== ''
         ? {
@@ -40,6 +42,15 @@ productRouter.get('/', async (req, res) => {
           }
         : {}
 
+    // filter product by gender
+    const genderFilter =
+      gender && gender !== ''
+        ? {
+            gender: gender,
+          }
+        : {}
+
+    // filter product by category
     const categoryFilter =
       category && category !== ''
         ? {
@@ -48,6 +59,8 @@ productRouter.get('/', async (req, res) => {
             },
           }
         : {}
+
+    // filter product by brand
     const brandFilter =
       brand && brand !== ''
         ? {
@@ -57,6 +70,7 @@ productRouter.get('/', async (req, res) => {
           }
         : {}
 
+    // filter product by price
     const priceFilter =
       price && price !== ''
         ? {
@@ -67,6 +81,7 @@ productRouter.get('/', async (req, res) => {
           }
         : {}
 
+    // filter product by rating
     const ratingFilter =
       rating && rating !== ''
         ? {
@@ -76,6 +91,7 @@ productRouter.get('/', async (req, res) => {
           }
         : {}
 
+    // sort products
     const sortOrder =
       order === 'newest'
         ? { createdAt: -1 }
@@ -89,6 +105,7 @@ productRouter.get('/', async (req, res) => {
 
     const query = {
       ...nameFilter,
+      ...genderFilter,
       ...categoryFilter,
       ...brandFilter,
       ...priceFilter,
