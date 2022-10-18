@@ -44,15 +44,19 @@ userRouter.put(
     if (user) {
       user.name = req.query.name || user.name
       user.email = req.query.email || user.email
-      if (req.query.password.trim().length != 0) {
+      user.phone = req.query.phone || user.phone || ''
+      user.address = req.query.address || user.address || ''
+      if (req.query.password && req.query.password.trim().length != 0) {
         user.password = bcrypt.hashSync(req.query.password, 8)
       }
 
       const updatedUser = await user.save()
       res.send({
         _id: updatedUser._id,
-        name: updatedUser.name,
         email: updatedUser.email,
+        name: updatedUser.name,
+        phone: updatedUser.phone,
+        address: updatedUser.address,
         isAdmin: updatedUser.isAdmin,
         token: generateToken(updatedUser),
       })
@@ -76,6 +80,8 @@ userRouter.post(
     res.send({
       _id: user._id,
       name: user.name,
+      phone: user.phone,
+      address: user.address,
       email: user.email,
       isAdmin: user.isAdmin,
       token: generateToken(user),
@@ -94,6 +100,8 @@ userRouter.post(
           _id: user._id,
           name: user.name,
           email: user.email,
+          phone: user.phone,
+          address: user.address,
           isAdmin: user.isAdmin,
           token: generateToken(user),
         })
