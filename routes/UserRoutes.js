@@ -3,6 +3,7 @@ import User from '../models/User.js'
 import bcrypt from 'bcryptjs'
 import expressAsyncHandler from 'express-async-handler'
 import { generateToken, isAdmin, isAuth } from '../utils.js'
+import Product from '../models/Product.js'
 
 const userRouter = express.Router()
 // Get all users
@@ -35,15 +36,76 @@ userRouter.delete(
   })
 )
 
+//add product to wishlist
+userRouter.put(
+  '/addWishlist',
+  expressAsyncHandler(async (req, res) => {
+    const user = await User.findById(req.query.userId)
+    const product = await Product.findById(req.query.productId)
+    if (user) {
+      const productExist = await user.wishlist.forEach((item) => {
+        if (item._id === req.query.productId) {
+          return true
+        } else {
+          return false
+        }
+      })
+      if (productExist) {
+        res.status(404).send({ message: 'Product Existed' })
+      } else {
+        user.wishlist.push(product)
+        const updatedUser = await user.save()
+        res.send({
+          _id: updatedUser._id,
+          email: updatedUser.email,
+          name: updatedUser.name,
+          wishlist: updatedUser.wishlist,
+          phone: updatedUser.phone,
+          address: updatedUser.address,
+          isAdmin: updatedUser.isAdmin,
+          token: generateToken(updatedUser),
+        })
+      }
+    } else {
+      res.status(404).send({ message: 'User Not Found' })
+    }
+  })
+)
+
+//remove product from wishlist
+userRouter.put(
+  '/removeWishlist',
+  expressAsyncHandler(async (req, res) => {
+    const user = await User.findById(req.query.userId)
+    if (user) {
+      user.wishlist = user.wishlist.filter(
+        (item) => item._id.toString() !== req.query.productId
+      )
+
+      const updatedUser = await user.save()
+      res.send({
+        _id: updatedUser._id,
+        email: updatedUser.email,
+        name: updatedUser.name,
+        wishlist: updatedUser.wishlist,
+        phone: updatedUser.phone,
+        address: updatedUser.address,
+        isAdmin: updatedUser.isAdmin,
+        token: generateToken(updatedUser),
+      })
+    } else {
+      res.status(404).send({ message: 'User Not Found' })
+    }
+  })
+)
+
 //update user info
 userRouter.put(
   '/update',
   expressAsyncHandler(async (req, res) => {
     const user = await User.findById(req.query.id)
-    console.log(`user found: ${user}`)
     if (user) {
       user.name = req.query.name || user.name
-      user.email = req.query.email || user.email
       user.phone = req.query.phone || user.phone || ''
       user.address = req.query.address || user.address || ''
       if (req.query.password && req.query.password.trim().length != 0) {
@@ -55,6 +117,7 @@ userRouter.put(
         _id: updatedUser._id,
         email: updatedUser.email,
         name: updatedUser.name,
+        wishlist: updatedUser.wishlist,
         phone: updatedUser.phone,
         address: updatedUser.address,
         isAdmin: updatedUser.isAdmin,
@@ -77,15 +140,8 @@ userRouter.post(
       password: bcrypt.hashSync(req.body.password),
     })
     const user = await newUser.save()
-    res.send({
-      _id: user._id,
-      name: user.name,
-      phone: user.phone,
-      address: user.address,
-      email: user.email,
-      isAdmin: user.isAdmin,
-      token: generateToken(user),
-    })
+
+    res.send(user)
   })
 )
 
@@ -101,6 +157,7 @@ userRouter.post(
           name: user.name,
           email: user.email,
           phone: user.phone,
+          wishlist: user.wishlist,
           address: user.address,
           isAdmin: user.isAdmin,
           token: generateToken(user),
